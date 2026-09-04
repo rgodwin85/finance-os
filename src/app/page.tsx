@@ -1,69 +1,136 @@
-import Image from "next/image";
+﻿"use client";
+
+import React, { useState, useEffect, useCallback } from "react";
+import { Shield, Sparkles, RefreshCw } from "lucide-react";
+import { BottomNav, NavTab } from "@/components/layout/bottom-nav";
+import { WaterfallCard } from "@/components/dashboard/waterfall-card";
+import { QuickAddDialog } from "@/components/transactions/quick-add-dialog";
+import { SinkingFundsCard } from "@/components/sinking-funds/sinking-funds-card";
+import { UtilityBufferCard } from "@/components/utilities/utility-buffer-card";
+import { RecentTransactions } from "@/components/transactions/recent-transactions";
+import { getWaterfallData } from "@/actions/waterfall";
+import { getSinkingFunds, SinkingFundItem } from "@/actions/sinking-funds";
+import { getTransactions, TransactionItem } from "@/actions/transactions";
+import { WaterfallStage } from "@/lib/waterfall";
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<NavTab>("waterfall");
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // App State
+  const [stages, setStages] = useState<WaterfallStage[]>([]);
+  const [activeStageNumber, setActiveStageNumber] = useState(1);
+  const [totalSaved, setTotalSaved] = useState(0);
+  const [totalTarget, setTotalTarget] = useState(0);
+  const [overallProgress, setOverallProgress] = useState(0);
+  const [sinkingFunds, setSinkingFunds] = useState<SinkingFundItem[]>([]);
+  const [transactions, setTransactions] = useState<TransactionItem[]>([]);
+
+  const loadData = useCallback(async () => {
+    try {
+      const [wf, funds, txs] = await Promise.all([
+        getWaterfallData(),
+        getSinkingFunds(),
+        getTransactions(25),
+      ]);
+
+      setStages(wf.stages);
+      setActiveStageNumber(wf.activeStageNumber);
+      setTotalSaved(wf.totalSaved);
+      setTotalTarget(wf.totalTarget);
+      setOverallProgress(wf.overallProgress);
+      setSinkingFunds(funds);
+      setTransactions(txs);
+    } catch (err) {
+      console.error("Error loading finance data:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleManualRefresh = () => {
+    setRefreshing(true);
+    loadData();
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-background text-foreground flex flex-col justify-between max-w-md mx-auto shadow-2xl pb-24 selection:bg-primary/20">
+      {/* Mobile Top Header */}
+      <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/60 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-sm">
+            <Shield className="w-4 h-4" />
+          </div>
+          <div>
+            <h1 className="text-base font-bold tracking-tight leading-none flex items-center gap-1.5">
+              Finance OS
+              <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                PWA
+              </span>
+            </h1>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Strict Priority Wealth Engine</p>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        <button
+          onClick={handleManualRefresh}
+          className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+          title="Refresh Data"
+          disabled={refreshing}
+        >
+          <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin text-primary" : ""}`} />
+        </button>
+      </header>
+
+      {/* Main Tab Content */}
+      <div className="flex-1 p-4">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground">
+            <RefreshCw className="w-6 h-6 animate-spin text-primary" />
+            <span className="text-xs">Loading financial fortress...</span>
+          </div>
+        ) : (
+          <>
+            {activeTab === "waterfall" && (
+              <WaterfallCard
+                stages={stages}
+                activeStageNumber={activeStageNumber}
+                totalSaved={totalSaved}
+                totalTarget={totalTarget}
+                overallProgress={overallProgress}
+                onRefresh={loadData}
+              />
+            )}
+
+            {activeTab === "sinking" && (
+              <SinkingFundsCard funds={sinkingFunds} onRefresh={loadData} />
+            )}
+
+            {activeTab === "utilities" && (
+              <UtilityBufferCard />
+            )}
+
+            {activeTab === "history" && (
+              <RecentTransactions transactions={transactions} />
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Floating Action Button (FAB) for < 15s Expense Entry */}
+      <QuickAddDialog
+        sinkingFunds={sinkingFunds}
+        onTransactionAdded={loadData}
+      />
+
+      {/* Sticky Bottom Navigation Bar */}
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+    </main>
   );
 }
