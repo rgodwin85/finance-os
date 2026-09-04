@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/navigation";
+﻿import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
@@ -16,26 +16,17 @@ async function handleDiscordReminder(req: Request) {
   if (cronSecret) {
     const authHeader = req.headers.get("authorization");
     if (authHeader !== `Bearer ${cronSecret}`) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
   if (!webhookUrl) {
-    return new Response(
-      JSON.stringify({
-        success: false,
-        delivered: false,
-        message: "DISCORD_WEBHOOK_URL is not configured in environment variables.",
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    return NextResponse.json({
+      success: false,
+      delivered: false,
+      message: "DISCORD_WEBHOOK_URL is not configured in environment variables.",
+    });
   }
 
   // Build the rich Discord Embed payload
@@ -78,42 +69,30 @@ async function handleDiscordReminder(req: Request) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      return new Response(
-        JSON.stringify({
+      return NextResponse.json(
+        {
           success: false,
           delivered: false,
           status: response.status,
           error: errorText,
-        }),
-        {
-          status: 502,
-          headers: { "Content-Type": "application/json" },
-        }
+        },
+        { status: 502 }
       );
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        delivered: true,
-        message: "Discord notification sent successfully.",
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    return NextResponse.json({
+      success: true,
+      delivered: true,
+      message: "Discord notification sent successfully.",
+    });
   } catch (err: any) {
-    return new Response(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         success: false,
         delivered: false,
         error: err.message,
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      },
+      { status: 500 }
     );
   }
 }
