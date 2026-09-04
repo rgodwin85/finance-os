@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +29,8 @@ async function handleDiscordReminder(req: Request) {
     });
   }
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://finance-os-psi-inky.vercel.app";
+
   // Build the rich Discord Embed payload
   const discordPayload = {
     username: "Finance OS Fortress",
@@ -36,12 +38,13 @@ async function handleDiscordReminder(req: Request) {
     embeds: [
       {
         title: "🛡️ Finance OS - Daily Expense Reminder",
-        description: "Did you spend outside your fixed bills today? Log it now.",
+        url: appUrl,
+        description: `Did you spend outside your fixed bills today? Log it now.\n\n🔗 **[Open Finance OS PWA](${appUrl})**`,
         color: 0x2563eb, // Vibrant blue
         fields: [
           {
             name: "⚡ Quick Capture",
-            value: "Tap the floating **+** button in Finance OS to log expenses in under 15 seconds.",
+            value: `Tap the floating **+** button in Finance OS to log expenses in under 15 seconds.\n👉 **[Launch App](${appUrl})**`,
             inline: false,
           },
           {
