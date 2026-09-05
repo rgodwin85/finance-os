@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
-import { PiggyBank, Plus, RefreshCw, TrendingUp } from "lucide-react";
+import { PiggyBank, Plus, RefreshCw, TrendingUp, Calendar, Clock, Target } from "lucide-react";
 import { SinkingFundItem, createSinkingFund, rolloverSinkingFunds } from "@/actions/sinking-funds";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -23,6 +23,7 @@ export function SinkingFundsCard({ funds, onRefresh }: SinkingFundsCardProps) {
   const [targetAmount, setTargetAmount] = useState("");
   const [monthlyContrib, setMonthlyContrib] = useState("");
   const [initialBalance, setInitialBalance] = useState("");
+  const [targetDate, setTargetDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -48,6 +49,7 @@ export function SinkingFundsCard({ funds, onRefresh }: SinkingFundsCardProps) {
       target_amount: target,
       monthly_contribution: monthly,
       initial_balance: initial,
+      target_date: targetDate || undefined,
     });
 
     setIsSubmitting(false);
@@ -58,6 +60,7 @@ export function SinkingFundsCard({ funds, onRefresh }: SinkingFundsCardProps) {
       setTargetAmount("");
       setMonthlyContrib("");
       setInitialBalance("");
+      setTargetDate("");
       setIsCreateOpen(false);
       if (onRefresh) onRefresh();
     }
@@ -148,15 +151,42 @@ export function SinkingFundsCard({ funds, onRefresh }: SinkingFundsCardProps) {
               ? Math.min(100, Math.round((fund.current_balance / fund.target_amount) * 100))
               : 0;
 
+            const daysLeft = fund.target_date
+              ? Math.max(1, Math.ceil((new Date(fund.target_date).getTime() - new Date().setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24)))
+              : null;
+
+            const remaining = Math.max(0, fund.target_amount - fund.current_balance);
+            const penniesPerDay = daysLeft && daysLeft > 0
+              ? Math.round((remaining / daysLeft) * 100) / 100
+              : Math.round((fund.monthly_contribution / 30) * 100) / 100;
+
             return (
               <div key={fund.id} className="p-4.5 rounded-2xl border border-border bg-card shadow-xs space-y-2.5">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h4 className="text-base font-bold">{fund.name}</h4>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-                      Contributing ${fund.monthly_contribution}/mo
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <h4 className="text-base font-bold">{fund.name}</h4>
+                      {percent >= 100 && (
+                        <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-bold px-1.5 py-0">
+                          Ready
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                        ${fund.monthly_contribution}/mo
+                      </span>
+                      <span className="font-mono text-[11px] font-semibold text-foreground/80 bg-muted/60 px-1.5 py-0.5 rounded">
+                        ${penniesPerDay.toFixed(2)}/day
+                      </span>
+                      {daysLeft !== null && (
+                        <span className="flex items-center gap-1 text-primary text-[11px] font-semibold">
+                          <Clock className="w-3 h-3" />
+                          {daysLeft}d left
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="text-right">
                     <span className="text-base font-bold font-mono">${fund.current_balance.toLocaleString()}</span>
@@ -185,7 +215,7 @@ export function SinkingFundsCard({ funds, onRefresh }: SinkingFundsCardProps) {
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">Add New Sinking Fund</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              Set up a designated reserve bucket that rolls over month to month.
+              Set up a designated reserve bucket with an optional due date and micro-quota.
             </DialogDescription>
           </DialogHeader>
 
@@ -202,7 +232,7 @@ export function SinkingFundsCard({ funds, onRefresh }: SinkingFundsCardProps) {
               </Label>
               <Input
                 id="fund-name"
-                placeholder="e.g. Car Maintenance & Tires"
+                placeholder="e.g. Car Maintenance & Tires, Christmas"
                 className="h-11 text-base rounded-xl"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -244,19 +274,34 @@ export function SinkingFundsCard({ funds, onRefresh }: SinkingFundsCardProps) {
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="fund-initial" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Starting Balance ($)
-              </Label>
-              <Input
-                id="fund-initial"
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                className="h-11 text-base font-mono rounded-xl"
-                value={initialBalance}
-                onChange={(e) => setInitialBalance(e.target.value)}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="fund-initial" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Starting Balance ($)
+                </Label>
+                <Input
+                  id="fund-initial"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  className="h-11 text-base font-mono rounded-xl"
+                  value={initialBalance}
+                  onChange={(e) => setInitialBalance(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="fund-date" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Target Due Date
+                </Label>
+                <Input
+                  id="fund-date"
+                  type="date"
+                  className="h-11 text-sm font-mono rounded-xl"
+                  value={targetDate}
+                  onChange={(e) => setTargetDate(e.target.value)}
+                />
+              </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-3">

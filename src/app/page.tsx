@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Shield, RefreshCw, LogIn, LogOut, Download, Sparkles, Sliders, Tv, Wallet, Briefcase, Split, Zap } from "lucide-react";
+import { Shield, RefreshCw, LogIn, LogOut, Download, Sparkles, Sliders, Tv, Wallet, Briefcase, Split, Zap, Layers, TrendingDown } from "lucide-react";
 import { BottomNav, NavTab } from "@/components/layout/bottom-nav";
 import { WaterfallCard } from "@/components/dashboard/waterfall-card";
+import { DebtSimulatorCard } from "@/components/debts/debt-simulator-card";
 import { QuickAddDialog } from "@/components/transactions/quick-add-dialog";
 import { SinkingFundsCard } from "@/components/sinking-funds/sinking-funds-card";
 import { UtilityBufferCard } from "@/components/utilities/utility-buffer-card";
@@ -27,6 +28,7 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<NavTab>("waterfall");
+  const [waterfallSubView, setWaterfallSubView] = useState<"ladder" | "debts">("ladder");
   const [budgetSubView, setBudgetSubView] = useState<"envelopes" | "subscriptions" | "freedom" | "splitter">("envelopes");
   const [bufferSubView, setBufferSubView] = useState<"income" | "utility">("income");
   const [splitterPrefillAmount, setSplitterPrefillAmount] = useState<number | undefined>(undefined);
@@ -194,14 +196,44 @@ export default function Home() {
         ) : (
           <>
             {activeTab === "waterfall" && (
-              <WaterfallCard
-                stages={stages}
-                activeStageNumber={activeStageNumber}
-                totalSaved={totalSaved}
-                totalTarget={totalTarget}
-                overallProgress={overallProgress}
-                onRefresh={loadData}
-              />
+              <div className="space-y-4">
+                {/* Waterfall Sub-View Switcher */}
+                <div className="flex bg-muted/60 p-1 rounded-2xl border border-border/80 text-xs font-bold">
+                  <button
+                    onClick={() => setWaterfallSubView("ladder")}
+                    className={`flex-1 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                      waterfallSubView === "ladder"
+                        ? "bg-card text-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Layers className="w-3.5 h-3.5" /> Waterfall Ladder
+                  </button>
+                  <button
+                    onClick={() => setWaterfallSubView("debts")}
+                    className={`flex-1 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                      waterfallSubView === "debts"
+                        ? "bg-card text-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <TrendingDown className="w-3.5 h-3.5" /> Stage 3: Debt Payoff
+                  </button>
+                </div>
+
+                {waterfallSubView === "ladder" ? (
+                  <WaterfallCard
+                    stages={stages}
+                    activeStageNumber={activeStageNumber}
+                    totalSaved={totalSaved}
+                    totalTarget={totalTarget}
+                    overallProgress={overallProgress}
+                    onRefresh={loadData}
+                  />
+                ) : (
+                  <DebtSimulatorCard onRefresh={loadData} />
+                )}
+              </div>
             )}
 
             {activeTab === "budget" && (

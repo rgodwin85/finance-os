@@ -79,31 +79,40 @@ export type Database = {
         Row: {
           balance: number
           created_at: string
+          due_day: number | null
           id: string
           interest_rate: number
           minimum_payment: number
           name: string
+          notes: string | null
           strategy: string
+          updated_at: string
           user_id: string
         }
         Insert: {
           balance?: number
           created_at?: string
+          due_day?: number | null
           id?: string
           interest_rate?: number
           minimum_payment?: number
           name: string
+          notes?: string | null
           strategy?: string
+          updated_at?: string
           user_id: string
         }
         Update: {
           balance?: number
           created_at?: string
+          due_day?: number | null
           id?: string
           interest_rate?: number
           minimum_payment?: number
           name?: string
+          notes?: string | null
           strategy?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -152,7 +161,9 @@ export type Database = {
           id: string
           monthly_contribution: number
           name: string
+          priority: string | null
           target_amount: number
+          target_date: string | null
           updated_at: string
           user_id: string
         }
@@ -163,7 +174,9 @@ export type Database = {
           id?: string
           monthly_contribution?: number
           name: string
+          priority?: string | null
           target_amount?: number
+          target_date?: string | null
           updated_at?: string
           user_id: string
         }
@@ -174,7 +187,9 @@ export type Database = {
           id?: string
           monthly_contribution?: number
           name?: string
+          priority?: string | null
           target_amount?: number
+          target_date?: string | null
           updated_at?: string
           user_id?: string
         }

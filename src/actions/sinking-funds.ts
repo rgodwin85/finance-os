@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -9,6 +9,8 @@ export interface SinkingFundItem {
   target_amount: number;
   current_balance: number;
   monthly_contribution: number;
+  target_date?: string | null;
+  priority?: string | null;
   category_id?: string | null;
   created_at: string;
   updated_at: string;
@@ -26,12 +28,14 @@ export async function getSinkingFunds(): Promise<SinkingFundItem[]> {
     return [];
   }
 
-  return (data || []).map((f) => ({
+  return (data || []).map((f: any) => ({
     id: f.id,
     name: f.name,
     target_amount: Number(f.target_amount),
     current_balance: Number(f.current_balance),
     monthly_contribution: Number(f.monthly_contribution),
+    target_date: f.target_date,
+    priority: f.priority,
     category_id: f.category_id,
     created_at: f.created_at,
     updated_at: f.updated_at,
@@ -43,6 +47,7 @@ export async function createSinkingFund(formData: {
   target_amount: number;
   monthly_contribution: number;
   initial_balance?: number;
+  target_date?: string;
 }) {
   const supabase = await createClient();
   const {
@@ -61,6 +66,7 @@ export async function createSinkingFund(formData: {
       target_amount: formData.target_amount,
       current_balance: formData.initial_balance || 0,
       monthly_contribution: formData.monthly_contribution,
+      target_date: formData.target_date || null,
     })
     .select()
     .single();
