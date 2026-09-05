@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Shield, RefreshCw, LogIn, LogOut, Download, User } from "lucide-react";
+import { Shield, RefreshCw, LogIn, LogOut, Download, Sparkles, Sliders, Tv, Wallet } from "lucide-react";
 import { BottomNav, NavTab } from "@/components/layout/bottom-nav";
 import { WaterfallCard } from "@/components/dashboard/waterfall-card";
 import { QuickAddDialog } from "@/components/transactions/quick-add-dialog";
@@ -10,22 +10,30 @@ import { UtilityBufferCard } from "@/components/utilities/utility-buffer-card";
 import { RecentTransactions } from "@/components/transactions/recent-transactions";
 import { AuthDialog } from "@/components/auth/auth-dialog";
 import { ExportDialog } from "@/components/export/export-dialog";
+import { SetupWizardDialog } from "@/components/wizard/setup-wizard-dialog";
+import { BudgetManagerCard } from "@/components/budget/budget-manager-card";
+import { SubscriptionAuditCard } from "@/components/subscriptions/subscription-audit-card";
 import { getWaterfallData } from "@/actions/waterfall";
 import { getSinkingFunds, SinkingFundItem } from "@/actions/sinking-funds";
 import { getTransactions, TransactionItem } from "@/actions/transactions";
 import { getCurrentUser, signOut } from "@/actions/auth";
+import { getIncomeProfile, IncomeProfile } from "@/actions/income";
+import { getCategoriesWithBudget, CategoryWithBudget } from "@/actions/categories";
 import { WaterfallStage } from "@/lib/waterfall";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<NavTab>("waterfall");
+  const [budgetSubView, setBudgetSubView] = useState<"envelopes" | "subscriptions">("envelopes");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   // User Auth State
   const [currentUser, setCurrentUser] = useState<{ id: string; email?: string } | null>(null);
+  const [incomeProfile, setIncomeProfile] = useState<IncomeProfile | null>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   // App Financial State
@@ -36,17 +44,21 @@ export default function Home() {
   const [overallProgress, setOverallProgress] = useState(0);
   const [sinkingFunds, setSinkingFunds] = useState<SinkingFundItem[]>([]);
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
+  const [categoriesWithBudget, setCategoriesWithBudget] = useState<CategoryWithBudget[]>([]);
 
   const loadData = useCallback(async () => {
     try {
-      const [user, wf, funds, txs] = await Promise.all([
+      const [user, profile, wf, funds, txs, cats] = await Promise.all([
         getCurrentUser(),
+        getIncomeProfile(),
         getWaterfallData(),
         getSinkingFunds(),
         getTransactions(25),
+        getCategoriesWithBudget(),
       ]);
 
       setCurrentUser(user);
+      setIncomeProfile(profile);
       setStages(wf.stages);
       setActiveStageNumber(wf.activeStageNumber);
       setTotalSaved(wf.totalSaved);
@@ -54,6 +66,12 @@ export default function Home() {
       setOverallProgress(wf.overallProgress);
       setSinkingFunds(funds);
       setTransactions(txs);
+      setCategoriesWithBudget(cats);
+
+      // Auto-trigger Setup Wizard if logged in but wizard hasn't been completed yet
+      if (user && (!profile || !profile.wizard_completed)) {
+        setIsWizardOpen(true);
+      }
     } catch (err) {
       console.error("Error loading finance data:", err);
     } finally {
@@ -120,10 +138,17 @@ export default function Home() {
 
               {/* Profile Dropdown */}
               {isProfileMenuOpen && (
-                <div className="absolute right-0 top-11 w-48 bg-card border border-border rounded-2xl shadow-xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95">
+                <div className="absolute right-0 top-11 w-52 bg-card border border-border rounded-2xl shadow-xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95">
                   <div className="px-3 py-2 border-b border-border/60 text-muted-foreground truncate">
                     <span className="block font-medium text-foreground truncate">{currentUser.email}</span>
                   </div>
+                  <button
+                    onClick={() => { setIsWizardOpen(true); setIsProfileMenuOpen(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-muted font-medium transition-colors text-left"
+                  >
+                    <Sliders className="w-3.5 h-3.5 text-primary" />
+                    Re-Run Setup Wizard
+                  </button>
                   <button
                     onClick={() => { setIsExportOpen(true); setIsProfileMenuOpen(false); }}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-muted font-medium transition-colors text-left"
@@ -174,6 +199,40 @@ export default function Home() {
               />
             )}
 
+            {activeTab === "budget" && (
+              <div className="space-y-4">
+                {/* Budget Sub-View Switcher */}
+                <div className="flex bg-muted/60 p-1 rounded-2xl border border-border/80">
+                  <button
+                    onClick={() => setBudgetSubView("envelopes")}
+                    className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                      budgetSubView === "envelopes"
+                        ? "bg-card text-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Wallet className="w-3.5 h-3.5" /> Budget Envelopes
+                  </button>
+                  <button
+                    onClick={() => setBudgetSubView("subscriptions")}
+                    className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                      budgetSubView === "subscriptions"
+                        ? "bg-card text-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Tv className="w-3.5 h-3.5" /> Subscriptions Audit
+                  </button>
+                </div>
+
+                {budgetSubView === "envelopes" ? (
+                  <BudgetManagerCard categories={categoriesWithBudget} onRefresh={loadData} />
+                ) : (
+                  <SubscriptionAuditCard categories={categoriesWithBudget} onRefresh={loadData} />
+                )}
+              </div>
+            )}
+
             {activeTab === "sinking" && (
               <SinkingFundsCard funds={sinkingFunds} onRefresh={loadData} />
             )}
@@ -208,6 +267,12 @@ export default function Home() {
       <ExportDialog
         open={isExportOpen}
         onOpenChange={setIsExportOpen}
+      />
+
+      <SetupWizardDialog
+        open={isWizardOpen}
+        onOpenChange={setIsWizardOpen}
+        onSuccess={loadData}
       />
     </main>
   );

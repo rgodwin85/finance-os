@@ -1,10 +1,10 @@
-﻿"use client";
+"use client";
 
 import React from "react";
-import { Layers, PiggyBank, Receipt, Zap } from "lucide-react";
+import { Layers, Wallet, PiggyBank, Receipt, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type NavTab = "waterfall" | "sinking" | "utilities" | "history";
+export type NavTab = "waterfall" | "budget" | "sinking" | "utilities" | "history";
 
 interface BottomNavProps {
   activeTab: NavTab;
@@ -14,14 +14,15 @@ interface BottomNavProps {
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const tabs = [
     { id: "waterfall" as NavTab, label: "Waterfall", icon: Layers },
-    { id: "sinking" as NavTab, label: "Sinking Funds", icon: PiggyBank },
-    { id: "utilities" as NavTab, label: "Utility Buffer", icon: Zap },
-    { id: "history" as NavTab, label: "Expenses", icon: Receipt },
+    { id: "budget" as NavTab, label: "Budget", icon: Wallet },
+    { id: "sinking" as NavTab, label: "Sinking", icon: PiggyBank },
+    { id: "utilities" as NavTab, label: "Utilities", icon: Zap },
+    { id: "history" as NavTab, label: "Outflows", icon: Receipt },
   ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur-lg border-t border-border/80 pb-[max(env(safe-area-inset-bottom,0px),16px)] shadow-lg">
-      <div className="max-w-md mx-auto grid grid-cols-4 h-16 items-center px-2">
+      <div className="max-w-md mx-auto grid grid-cols-5 h-16 items-center px-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -37,10 +38,12 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
               )}
             >
               {isActive && (
-                <span className="absolute top-0 w-10 h-1 bg-primary rounded-b-full shadow-sm" />
+                <span className="absolute top-0 w-8 h-1 bg-primary rounded-b-full shadow-sm" />
               )}
-              <Icon className={cn("w-5 h-5 transition-transform", isActive && "scale-115 text-primary")} />
-              <span className="text-xs tracking-tight leading-none">{tab.label}</span>
+              <Icon className={cn("w-5 h-5 transition-transform", isActive && "scale-110 text-primary")} />
+              <span className="text-[11px] tracking-tight leading-none truncate w-full text-center px-0.5">
+                {tab.label}
+              </span>
             </button>
           );
         })}

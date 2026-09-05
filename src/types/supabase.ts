@@ -42,24 +42,33 @@ export type Database = {
       categories: {
         Row: {
           created_at: string
+          flagged_for_cancellation: boolean
           id: string
+          is_subscription: boolean
           name: string
+          rollover_rule: string
           target_monthly: number
           type: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          flagged_for_cancellation?: boolean
           id?: string
+          is_subscription?: boolean
           name: string
+          rollover_rule?: string
           target_monthly?: number
           type: string
           user_id: string
         }
         Update: {
           created_at?: string
+          flagged_for_cancellation?: boolean
           id?: string
+          is_subscription?: boolean
           name?: string
+          rollover_rule?: string
           target_monthly?: number
           type?: string
           user_id?: string
@@ -216,6 +225,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_income_profiles: {
+        Row: {
+          barebones_monthly: number
+          comfortable_monthly: number
+          created_at: string
+          id: string
+          monthly_gross_income: number
+          monthly_net_income: number
+          pay_frequency: string
+          tax_rate_percent: number
+          updated_at: string
+          user_id: string
+          wizard_completed: boolean
+        }
+        Insert: {
+          barebones_monthly?: number
+          comfortable_monthly?: number
+          created_at?: string
+          id?: string
+          monthly_gross_income?: number
+          monthly_net_income?: number
+          pay_frequency?: string
+          tax_rate_percent?: number
+          updated_at?: string
+          user_id: string
+          wizard_completed?: boolean
+        }
+        Update: {
+          barebones_monthly?: number
+          comfortable_monthly?: number
+          created_at?: string
+          id?: string
+          monthly_gross_income?: number
+          monthly_net_income?: number
+          pay_frequency?: string
+          tax_rate_percent?: number
+          updated_at?: string
+          user_id?: string
+          wizard_completed?: boolean
+        }
+        Relationships: []
       }
       utility_buffers: {
         Row: {
