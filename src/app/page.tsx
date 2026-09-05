@@ -15,6 +15,7 @@ import { AuthDialog } from "@/components/auth/auth-dialog";
 import { ExportDialog } from "@/components/export/export-dialog";
 import { SetupWizardDialog } from "@/components/wizard/setup-wizard-dialog";
 import { ManualDialog } from "@/components/manual/manual-dialog";
+import { AICopilotDialog } from "@/components/copilot/ai-copilot-dialog";
 import { BudgetManagerCard } from "@/components/budget/budget-manager-card";
 import { SubscriptionAuditCard } from "@/components/subscriptions/subscription-audit-card";
 import { FreedomRateCalculator } from "@/components/calculator/freedom-rate-calculator";
@@ -47,6 +48,7 @@ export default function Home() {
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isManualOpen, setIsManualOpen] = useState(false);
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [sendingDiscord, setSendingDiscord] = useState(false);
   const [discordNotice, setDiscordNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -150,6 +152,15 @@ export default function Home() {
         {/* Header Actions */}
         <div className="flex items-center gap-1.5 relative">
           <button
+            onClick={() => setIsCopilotOpen(true)}
+            className="p-2 rounded-xl text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+            title="AI Budgeting Copilot (Voice & Consumables)"
+            aria-label="AI Budgeting Copilot"
+          >
+            <Sparkles className="w-4 h-4" />
+          </button>
+
+          <button
             onClick={() => setIsManualOpen(true)}
             className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
             title="Operations Manual & Field Guide"
@@ -186,6 +197,13 @@ export default function Home() {
                   <div className="px-3 py-2 border-b border-border/60 text-muted-foreground truncate">
                     <span className="block font-medium text-foreground truncate">{currentUser.email}</span>
                   </div>
+                  <button
+                    onClick={() => { setIsCopilotOpen(true); setIsProfileMenuOpen(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-muted font-medium transition-colors text-left"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    AI Budgeting Copilot
+                  </button>
                   <button
                     onClick={() => { setIsManualOpen(true); setIsProfileMenuOpen(false); }}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-muted font-medium transition-colors text-left"
@@ -468,6 +486,12 @@ export default function Home() {
       <ManualDialog
         open={isManualOpen}
         onOpenChange={setIsManualOpen}
+      />
+
+      <AICopilotDialog
+        open={isCopilotOpen}
+        onOpenChange={setIsCopilotOpen}
+        onSuccess={loadData}
       />
     </main>
   );

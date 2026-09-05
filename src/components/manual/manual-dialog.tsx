@@ -224,6 +224,20 @@ export function ManualDialog({ open, onOpenChange }: ManualDialogProps) {
                     <li>Remaining 100% surplus into the current active Waterfall milestone.</li>
                   </ul>
                 </div>
+
+                <div className="p-3 rounded-2xl bg-card border border-border/80 space-y-1.5">
+                  <h4 className="font-bold text-foreground flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" /> AI Budgeting Copilot & Voice-to-Text
+                  </h4>
+                  <p className="text-muted-foreground text-[11px]">
+                    Tap the <strong>Sparkles</strong> button in the top header. You can dictate or type routine consumable staples and vehicle commute details:
+                  </p>
+                  <ul className="list-disc pl-4 space-y-1 text-muted-foreground text-[11px]">
+                    <li><strong>Consumables Frequency Math:</strong> Tell it you buy Burt's Bees toothpaste 2-pack, deodorant 2-pack, and Dial soap two 8-packs. The AI determines how many days each pack lasts and calculates the prorated monthly cost, mapping items to <code>Personal Care</code> or <code>Household Supplies</code>.</li>
+                    <li><strong>Vehicle Intelligence:</strong> Tell it your vehicle year, make, and model (e.g. 2018 Honda Civic, 25 mi/day, gas $3.45/gal). The AI calculates monthly fuel burn and routine maintenance sinking fund quotas ($0.07/mi).</li>
+                    <li><strong>Zero-Cost & Offline:</strong> Operates 100% offline out of the box with built-in catalog rules. Optional support for free-tier Groq (Llama 3.3) or Gemini Flash with online search pricing.</li>
+                  </ul>
+                </div>
               </div>
             </div>
           )}
