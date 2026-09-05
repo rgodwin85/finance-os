@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Shield, RefreshCw, LogIn, LogOut, Download, Sparkles, Sliders, Tv, Wallet, Briefcase, Split, Zap, Layers, TrendingDown, Lock } from "lucide-react";
+import { Shield, RefreshCw, LogIn, LogOut, Download, Sparkles, Sliders, Tv, Wallet, Briefcase, Split, Zap, Layers, TrendingDown, Lock, BookOpen, Send, CheckCircle2, AlertCircle } from "lucide-react";
 import { BottomNav, NavTab } from "@/components/layout/bottom-nav";
 import { WaterfallCard } from "@/components/dashboard/waterfall-card";
+import { CashFlowRunRateCard } from "@/components/dashboard/cashflow-runrate-card";
 import { DebtSimulatorCard } from "@/components/debts/debt-simulator-card";
 import { QuickAddDialog } from "@/components/transactions/quick-add-dialog";
 import { SinkingFundsCard } from "@/components/sinking-funds/sinking-funds-card";
@@ -13,6 +14,7 @@ import { RecentTransactions } from "@/components/transactions/recent-transaction
 import { AuthDialog } from "@/components/auth/auth-dialog";
 import { ExportDialog } from "@/components/export/export-dialog";
 import { SetupWizardDialog } from "@/components/wizard/setup-wizard-dialog";
+import { ManualDialog } from "@/components/manual/manual-dialog";
 import { BudgetManagerCard } from "@/components/budget/budget-manager-card";
 import { SubscriptionAuditCard } from "@/components/subscriptions/subscription-audit-card";
 import { FreedomRateCalculator } from "@/components/calculator/freedom-rate-calculator";
@@ -25,6 +27,7 @@ import { getTransactions, TransactionItem } from "@/actions/transactions";
 import { getCurrentUser, signOut } from "@/actions/auth";
 import { getIncomeProfile, IncomeProfile } from "@/actions/income";
 import { getCategoriesWithBudget, CategoryWithBudget } from "@/actions/categories";
+import { dispatchDiscordSnapshot } from "@/actions/discord-report";
 import { WaterfallStage } from "@/lib/waterfall";
 import { Button } from "@/components/ui/button";
 
@@ -43,7 +46,10 @@ export default function Home() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [isManualOpen, setIsManualOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [sendingDiscord, setSendingDiscord] = useState(false);
+  const [discordNotice, setDiscordNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // App Financial State
   const [stages, setStages] = useState<WaterfallStage[]>([]);
@@ -104,6 +110,24 @@ export default function Home() {
     loadData();
   };
 
+  const handleDispatchDiscord = async () => {
+    setSendingDiscord(true);
+    setIsProfileMenuOpen(false);
+    try {
+      const res = await dispatchDiscordSnapshot();
+      if (res.success) {
+        setDiscordNotice({ type: "success", text: res.message });
+      } else {
+        setDiscordNotice({ type: "error", text: res.message });
+      }
+    } catch (err: any) {
+      setDiscordNotice({ type: "error", text: err.message || "Failed to dispatch Discord snapshot." });
+    } finally {
+      setSendingDiscord(false);
+      setTimeout(() => setDiscordNotice(null), 5000);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col justify-between max-w-md mx-auto shadow-2xl pb-32 selection:bg-primary/20">
       {/* Mobile Top Header - iOS Safe Area Padding prevents iPhone 11 notch/status-bar collision */}
@@ -125,6 +149,15 @@ export default function Home() {
 
         {/* Header Actions */}
         <div className="flex items-center gap-1.5 relative">
+          <button
+            onClick={() => setIsManualOpen(true)}
+            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+            title="Operations Manual & Field Guide"
+            aria-label="Operations Manual"
+          >
+            <BookOpen className="w-4 h-4" />
+          </button>
+
           <button
             onClick={handleManualRefresh}
             className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
@@ -149,10 +182,25 @@ export default function Home() {
 
               {/* Profile Dropdown */}
               {isProfileMenuOpen && (
-                <div className="absolute right-0 top-11 w-52 bg-card border border-border rounded-2xl shadow-xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95">
+                <div className="absolute right-0 top-11 w-56 bg-card border border-border rounded-2xl shadow-xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95 space-y-0.5">
                   <div className="px-3 py-2 border-b border-border/60 text-muted-foreground truncate">
                     <span className="block font-medium text-foreground truncate">{currentUser.email}</span>
                   </div>
+                  <button
+                    onClick={() => { setIsManualOpen(true); setIsProfileMenuOpen(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-muted font-medium transition-colors text-left"
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-primary" />
+                    Field Guide & Rules
+                  </button>
+                  <button
+                    onClick={handleDispatchDiscord}
+                    disabled={sendingDiscord}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-muted font-medium transition-colors text-left"
+                  >
+                    <Send className={`w-3.5 h-3.5 text-primary ${sendingDiscord ? "animate-spin" : ""}`} />
+                    {sendingDiscord ? "Sending Snapshot..." : "Send Discord Snapshot"}
+                  </button>
                   <button
                     onClick={() => { setIsWizardOpen(true); setIsProfileMenuOpen(false); }}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-muted font-medium transition-colors text-left"
@@ -190,6 +238,24 @@ export default function Home() {
         </div>
       </header>
 
+      {/* Discord Notification Toast Banner */}
+      {discordNotice && (
+        <div
+          className={`mx-4 mt-2 p-3 rounded-2xl border text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-top-2 ${
+            discordNotice.type === "success"
+              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+              : "bg-destructive/10 border-destructive/30 text-destructive"
+          }`}
+        >
+          {discordNotice.type === "success" ? (
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 shrink-0" />
+          )}
+          <span>{discordNotice.text}</span>
+        </div>
+      )}
+
       {/* Main Tab Content */}
       <div className="flex-1 p-4 space-y-4">
         {loading ? (
@@ -226,14 +292,17 @@ export default function Home() {
                 </div>
 
                 {waterfallSubView === "ladder" ? (
-                  <WaterfallCard
-                    stages={stages}
-                    activeStageNumber={activeStageNumber}
-                    totalSaved={totalSaved}
-                    totalTarget={totalTarget}
-                    overallProgress={overallProgress}
-                    onRefresh={loadData}
-                  />
+                  <div className="space-y-4">
+                    <CashFlowRunRateCard />
+                    <WaterfallCard
+                      stages={stages}
+                      activeStageNumber={activeStageNumber}
+                      totalSaved={totalSaved}
+                      totalTarget={totalTarget}
+                      overallProgress={overallProgress}
+                      onRefresh={loadData}
+                    />
+                  </div>
                 ) : (
                   <DebtSimulatorCard onRefresh={loadData} />
                 )}
@@ -394,6 +463,11 @@ export default function Home() {
         open={isWizardOpen}
         onOpenChange={setIsWizardOpen}
         onSuccess={loadData}
+      />
+
+      <ManualDialog
+        open={isManualOpen}
+        onOpenChange={setIsManualOpen}
       />
     </main>
   );

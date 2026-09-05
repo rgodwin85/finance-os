@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
-import { Zap, ShieldCheck } from "lucide-react";
+import { Zap, ShieldCheck, AlertCircle, ArrowDownLeft, Sparkles, CheckCircle2 } from "lucide-react";
 import { calculateUtilityBuffer } from "@/lib/utilities";
+import { hapticSuccess, hapticMedium } from "@/lib/haptics";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -11,22 +12,39 @@ import { Input } from "@/components/ui/input";
 
 export function UtilityBufferCard() {
   const [history, setHistory] = useState<number[]>([185, 210, 340, 395, 260, 220]);
-  const [bufferBalance, setBufferBalance] = useState<number>(240);
+  const [bufferBalance, setBufferBalance] = useState<number>(340);
   const [newMonthBill, setNewMonthBill] = useState<string>("");
+  const [absorptionSuccess, setAbsorptionSuccess] = useState<string | null>(null);
 
   const stats = calculateUtilityBuffer(history, bufferBalance);
+
+  const latestBill = history[history.length - 1];
+  const isSpike = latestBill > stats.trailingAverage;
+  const spikeDelta = isSpike ? latestBill - stats.trailingAverage : 0;
 
   const handleAddBill = (e: React.FormEvent) => {
     e.preventDefault();
     const val = parseFloat(newMonthBill);
     if (!isNaN(val) && val > 0) {
+      hapticMedium();
       setHistory((prev) => [...prev.slice(1), val]);
       setNewMonthBill("");
     }
   };
 
   const handleDepositToBuffer = () => {
+    hapticSuccess();
     setBufferBalance((prev) => prev + stats.monthlySavingsTarget);
+  };
+
+  const handleAbsorbSpike = () => {
+    if (spikeDelta <= 0 || bufferBalance < spikeDelta) return;
+    hapticSuccess();
+    setBufferBalance((prev) => Math.max(0, prev - spikeDelta));
+    setAbsorptionSuccess(
+      `🛡️ Absorbed $${spikeDelta.toFixed(0)} seasonal spike from Utility Buffer! Operating checking cash untouched.`
+    );
+    setTimeout(() => setAbsorptionSuccess(null), 5000);
   };
 
   return (
@@ -49,11 +67,41 @@ export function UtilityBufferCard() {
             </span>
           </CardTitle>
           <CardDescription className="text-sm text-muted-foreground mt-1 leading-relaxed">
-            Smooths seasonal electric/heating spikes by holding a rolling shock-absorber bucket.
+            Smooths summer cooling and winter heating bills by holding a rolling seasonal shock absorber.
           </CardDescription>
         </CardHeader>
 
         <CardContent className="px-5 pb-5 pt-0 space-y-4">
+          {absorptionSuccess && (
+            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 animate-in fade-in">
+              <CheckCircle2 className="w-4 h-4" />
+              {absorptionSuccess}
+            </div>
+          )}
+
+          {/* Seasonal Spike Alert & 1-Tap Absorption */}
+          {isSpike && spikeDelta > 0 && (
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-2">
+              <div className="flex items-center justify-between font-bold text-amber-700 dark:text-amber-300">
+                <span className="flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-amber-500" /> Seasonal Spike Detected!
+                </span>
+                <span className="font-mono">+${spikeDelta.toFixed(0)} above avg</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Latest bill of ${latestBill} is ${spikeDelta.toFixed(0)} higher than your ${stats.trailingAverage}/mo trailing baseline.
+              </p>
+              <Button
+                onClick={handleAbsorbSpike}
+                disabled={bufferBalance < spikeDelta}
+                size="sm"
+                className="w-full h-8 text-xs font-bold rounded-xl gap-1.5 bg-amber-500 hover:bg-amber-600 text-white"
+              >
+                <ArrowDownLeft className="w-3.5 h-3.5" /> Absorb +${spikeDelta.toFixed(0)} from Utility Buffer
+              </Button>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs font-semibold">
               <span className="text-muted-foreground">Buffer Shield Health</span>
