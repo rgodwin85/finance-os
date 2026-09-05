@@ -1,8 +1,9 @@
-﻿"use client";
-
 import React, { useState } from "react";
-import { Plus, Receipt, Sparkles } from "lucide-react";
+import { Plus, Receipt, Sparkles, Lock } from "lucide-react";
 import { addTransaction } from "@/actions/transactions";
+import { recordStreakActivity } from "@/actions/streaks";
+import { quarantineImpulseItem } from "@/actions/impulse";
+import { hapticSuccess, hapticMedium, hapticLight } from "@/lib/haptics";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +61,34 @@ export function QuickAddDialog({ sinkingFunds = [], onTransactionAdded }: QuickA
     if (res.error) {
       setErrorMsg(res.error);
     } else {
+      hapticSuccess();
+      recordStreakActivity().catch(console.error);
+      setAmount("");
+      setDescription("");
+      setSelectedFundId("");
+      setOpen(false);
+      if (onTransactionAdded) onTransactionAdded();
+    }
+  };
+
+  const handleQuarantine = async () => {
+    const amountVal = parseFloat(amount);
+    if (isNaN(amountVal) || amountVal <= 0) {
+      setErrorMsg("Please enter an amount greater than $0 to quarantine.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    hapticMedium();
+    const res = await quarantineImpulseItem({
+      name: description || categoryName,
+      amount: amountVal,
+      reason: "Quarantined via Quick-Add",
+    });
+    setIsSubmitting(false);
+
+    if (res.success) {
+      hapticSuccess();
       setAmount("");
       setDescription("");
       setSelectedFundId("");
@@ -186,14 +215,26 @@ export function QuickAddDialog({ sinkingFunds = [], onTransactionAdded }: QuickA
               />
             </div>
 
-            <Button
-              type="submit"
-              size="lg"
-              disabled={isSubmitting}
-              className="w-full h-12 text-base font-semibold rounded-xl mt-2 shadow-sm"
-            >
-              {isSubmitting ? "Logging..." : "Log Outflow ($" + (amount || "0.00") + ")"}
-            </Button>
+            <div className="space-y-2 pt-2">
+              <Button
+                type="submit"
+                size="lg"
+                disabled={isSubmitting}
+                className="w-full h-12 text-base font-semibold rounded-xl shadow-sm"
+              >
+                {isSubmitting ? "Logging..." : "Log Outflow ($" + (amount || "0.00") + ")"}
+              </Button>
+
+              <button
+                type="button"
+                onClick={handleQuarantine}
+                disabled={isSubmitting || !amount}
+                className="w-full py-2.5 px-3 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                Quarantine in 72h Impulse Locker Instead
+              </button>
+            </div>
           </form>
         </DialogContent>
       </Dialog>

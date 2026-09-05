@@ -117,6 +117,42 @@ export type Database = {
         }
         Relationships: []
       }
+      impulse_items: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          locked_at: string
+          name: string
+          reason: string | null
+          status: string
+          unlocks_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          locked_at?: string
+          name: string
+          reason?: string | null
+          status?: string
+          unlocks_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          locked_at?: string
+          name?: string
+          reason?: string | null
+          status?: string
+          unlocks_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       milestones: {
         Row: {
           created_at: string
@@ -246,9 +282,12 @@ export type Database = {
           barebones_monthly: number
           comfortable_monthly: number
           created_at: string
+          current_streak: number
           holding_buffer_balance: number
           id: string
           is_variable_income: boolean
+          last_streak_date: string | null
+          longest_streak: number
           monthly_gross_income: number
           monthly_net_income: number
           pay_frequency: string
@@ -259,6 +298,7 @@ export type Database = {
           savings_target_percent: number
           target_monthly_salary: number
           tax_rate_percent: number
+          total_impulse_saved: number
           updated_at: string
           user_id: string
           wizard_completed: boolean
@@ -269,9 +309,12 @@ export type Database = {
           barebones_monthly?: number
           comfortable_monthly?: number
           created_at?: string
+          current_streak?: number
           holding_buffer_balance?: number
           id?: string
           is_variable_income?: boolean
+          last_streak_date?: string | null
+          longest_streak?: number
           monthly_gross_income?: number
           monthly_net_income?: number
           pay_frequency?: string
@@ -282,6 +325,7 @@ export type Database = {
           savings_target_percent?: number
           target_monthly_salary?: number
           tax_rate_percent?: number
+          total_impulse_saved?: number
           updated_at?: string
           user_id: string
           wizard_completed?: boolean
@@ -292,9 +336,12 @@ export type Database = {
           barebones_monthly?: number
           comfortable_monthly?: number
           created_at?: string
+          current_streak?: number
           holding_buffer_balance?: number
           id?: string
           is_variable_income?: boolean
+          last_streak_date?: string | null
+          longest_streak?: number
           monthly_gross_income?: number
           monthly_net_income?: number
           pay_frequency?: string
@@ -305,6 +352,7 @@ export type Database = {
           savings_target_percent?: number
           target_monthly_salary?: number
           tax_rate_percent?: number
+          total_impulse_saved?: number
           updated_at?: string
           user_id?: string
           wizard_completed?: boolean
