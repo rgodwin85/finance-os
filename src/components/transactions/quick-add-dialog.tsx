@@ -70,12 +70,12 @@ export function QuickAddDialog({ sinkingFunds = [], onTransactionAdded }: QuickA
 
   return (
     <>
-      {/* Floating Action Button (FAB) - optimized for thumb reach */}
-      <div className="fixed bottom-20 right-4 z-40">
+      {/* Floating Action Button (FAB) - Clear of bottom navigation bar */}
+      <div className="fixed bottom-26 right-5 z-40 pointer-events-auto">
         <Button
           onClick={() => setOpen(true)}
           size="lg"
-          className="h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground p-0 flex items-center justify-center transition-transform active:scale-95 ring-4 ring-background"
+          className="h-14 w-14 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground p-0 flex items-center justify-center transition-transform active:scale-95 ring-4 ring-background border border-primary/30"
           aria-label="Quick Add Expense"
         >
           <Plus className="w-7 h-7" />
@@ -84,28 +84,28 @@ export function QuickAddDialog({ sinkingFunds = [], onTransactionAdded }: QuickA
 
       {/* Quick Add Modal (< 15 second capture) */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md w-[92vw] max-w-[425px] rounded-2xl p-6">
+        <DialogContent className="sm:max-w-md w-[94vw] max-w-[425px] rounded-2xl p-6">
           <DialogHeader className="text-left">
-            <DialogTitle className="flex items-center gap-2 text-lg">
+            <DialogTitle className="flex items-center gap-2 text-lg font-bold">
               <Receipt className="w-5 h-5 text-primary" />
               Quick Add Expense
             </DialogTitle>
-            <DialogDescription className="text-xs">
-              Log an expense in under 15 seconds to keep your budget fortress accurate.
+            <DialogDescription className="text-sm text-muted-foreground">
+              Log an expense in under 15 seconds to keep your financial fortress accurate.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
             {errorMsg && (
-              <div className="p-2.5 text-xs bg-destructive/10 border border-destructive/20 text-destructive rounded-lg">
+              <div className="p-3 text-xs bg-destructive/10 border border-destructive/20 text-destructive rounded-xl">
                 {errorMsg}
               </div>
             )}
 
-            {/* Big Amount Input */}
+            {/* Big Amount Input - Min 16px to prevent iOS auto-zoom */}
             <div className="space-y-1.5">
               <Label htmlFor="quick-amount" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Amount
+                Amount Spent
               </Label>
               <div className="relative">
                 <span className="absolute left-4 top-2.5 text-2xl font-bold text-muted-foreground">$</span>
@@ -129,7 +129,7 @@ export function QuickAddDialog({ sinkingFunds = [], onTransactionAdded }: QuickA
               <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Category
               </Label>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {COMMON_CATEGORIES.map((cat) => {
                   const isSelected = categoryName === cat.name;
                   return (
@@ -137,10 +137,10 @@ export function QuickAddDialog({ sinkingFunds = [], onTransactionAdded }: QuickA
                       key={cat.name}
                       type="button"
                       onClick={() => setCategoryName(cat.name)}
-                      className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-colors ${
+                      className={`text-xs px-3 py-2 rounded-xl border font-semibold transition-all h-9 flex items-center ${
                         isSelected
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-muted/40 text-muted-foreground hover:text-foreground border-border/60"
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                          : "bg-muted/40 text-muted-foreground hover:text-foreground border-border"
                       }`}
                     >
                       {cat.name}
@@ -154,18 +154,18 @@ export function QuickAddDialog({ sinkingFunds = [], onTransactionAdded }: QuickA
             {sinkingFunds.length > 0 && (
               <div className="space-y-1.5">
                 <Label htmlFor="sinking-link" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-amber-500" /> Draw from Sinking Fund (Optional)
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Draw from Sinking Fund (Optional)
                 </Label>
                 <select
                   id="sinking-link"
                   value={selectedFundId}
                   onChange={(e) => setSelectedFundId(e.target.value)}
-                  className="w-full h-10 px-3 text-sm rounded-lg border border-border bg-background"
+                  className="w-full h-11 px-3 text-sm rounded-xl border border-border bg-background"
                 >
-                  <option value="">None (Standard Expense)</option>
+                  <option value="">None (Standard Outflow)</option>
                   {sinkingFunds.map((fund) => (
                     <option key={fund.id} value={fund.id}>
-                      {fund.name} (Balance: ${fund.current_balance})
+                      {fund.name} (Available: ${fund.current_balance})
                     </option>
                   ))}
                 </select>
@@ -179,8 +179,8 @@ export function QuickAddDialog({ sinkingFunds = [], onTransactionAdded }: QuickA
               </Label>
               <Input
                 id="quick-desc"
-                placeholder="Trader Joe's, gas station, etc."
-                className="h-10 text-sm rounded-lg"
+                placeholder="Trader Joe's, shell station, etc."
+                className="h-11 text-base rounded-xl"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
@@ -190,9 +190,9 @@ export function QuickAddDialog({ sinkingFunds = [], onTransactionAdded }: QuickA
               type="submit"
               size="lg"
               disabled={isSubmitting}
-              className="w-full h-12 text-base font-semibold rounded-xl mt-2"
+              className="w-full h-12 text-base font-semibold rounded-xl mt-2 shadow-sm"
             >
-              {isSubmitting ? "Logging..." : "Log Expense ($" + (amount || "0.00") + ")"}
+              {isSubmitting ? "Logging..." : "Log Outflow ($" + (amount || "0.00") + ")"}
             </Button>
           </form>
         </DialogContent>

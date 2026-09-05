@@ -1,24 +1,34 @@
 ﻿"use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Shield, Sparkles, RefreshCw } from "lucide-react";
+import { Shield, RefreshCw, LogIn, LogOut, Download, User } from "lucide-react";
 import { BottomNav, NavTab } from "@/components/layout/bottom-nav";
 import { WaterfallCard } from "@/components/dashboard/waterfall-card";
 import { QuickAddDialog } from "@/components/transactions/quick-add-dialog";
 import { SinkingFundsCard } from "@/components/sinking-funds/sinking-funds-card";
 import { UtilityBufferCard } from "@/components/utilities/utility-buffer-card";
 import { RecentTransactions } from "@/components/transactions/recent-transactions";
+import { AuthDialog } from "@/components/auth/auth-dialog";
+import { ExportDialog } from "@/components/export/export-dialog";
 import { getWaterfallData } from "@/actions/waterfall";
 import { getSinkingFunds, SinkingFundItem } from "@/actions/sinking-funds";
 import { getTransactions, TransactionItem } from "@/actions/transactions";
+import { getCurrentUser, signOut } from "@/actions/auth";
 import { WaterfallStage } from "@/lib/waterfall";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<NavTab>("waterfall");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // App State
+  // User Auth State
+  const [currentUser, setCurrentUser] = useState<{ id: string; email?: string } | null>(null);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  // App Financial State
   const [stages, setStages] = useState<WaterfallStage[]>([]);
   const [activeStageNumber, setActiveStageNumber] = useState(1);
   const [totalSaved, setTotalSaved] = useState(0);
@@ -29,12 +39,14 @@ export default function Home() {
 
   const loadData = useCallback(async () => {
     try {
-      const [wf, funds, txs] = await Promise.all([
+      const [user, wf, funds, txs] = await Promise.all([
+        getCurrentUser(),
         getWaterfallData(),
         getSinkingFunds(),
         getTransactions(25),
       ]);
 
+      setCurrentUser(user);
       setStages(wf.stages);
       setActiveStageNumber(wf.activeStageNumber);
       setTotalSaved(wf.totalSaved);
@@ -59,41 +71,95 @@ export default function Home() {
     loadData();
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    setIsProfileMenuOpen(false);
+    loadData();
+  };
+
   return (
-    <main className="min-h-screen bg-background text-foreground flex flex-col justify-between max-w-md mx-auto shadow-2xl pb-24 selection:bg-primary/20">
-      {/* Mobile Top Header */}
-      <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/60 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-sm">
-            <Shield className="w-4 h-4" />
+    <main className="min-h-screen bg-background text-foreground flex flex-col justify-between max-w-md mx-auto shadow-2xl pb-32 selection:bg-primary/20">
+      {/* Mobile Top Header - iOS Safe Area Padding prevents iPhone 11 notch/status-bar collision */}
+      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/80 pt-[max(env(safe-area-inset-top,0px),28px)] pb-3.5 px-4 flex items-center justify-between shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-xs">
+            <Shield className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-base font-bold tracking-tight leading-none flex items-center gap-1.5">
+            <h1 className="text-lg font-black tracking-tight leading-none flex items-center gap-1.5">
               Finance OS
-              <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+              <span className="text-[10px] uppercase font-mono font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
                 PWA
               </span>
             </h1>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Strict Priority Wealth Engine</p>
+            <p className="text-xs text-muted-foreground mt-0.5 font-medium">Strict Priority Wealth Engine</p>
           </div>
         </div>
 
-        <button
-          onClick={handleManualRefresh}
-          className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-          title="Refresh Data"
-          disabled={refreshing}
-        >
-          <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin text-primary" : ""}`} />
-        </button>
+        {/* Header Actions */}
+        <div className="flex items-center gap-1.5 relative">
+          <button
+            onClick={handleManualRefresh}
+            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+            title="Refresh Data"
+            disabled={refreshing}
+            aria-label="Refresh"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin text-primary" : ""}`} />
+          </button>
+
+          {currentUser ? (
+            <div className="relative">
+              <button
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className="w-9 h-9 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center text-xs font-bold font-mono transition-transform active:scale-95"
+                title={currentUser.email || "User Account"}
+              >
+                {currentUser.email ? currentUser.email[0].toUpperCase() : "U"}
+              </button>
+
+              {/* Profile Dropdown */}
+              {isProfileMenuOpen && (
+                <div className="absolute right-0 top-11 w-48 bg-card border border-border rounded-2xl shadow-xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95">
+                  <div className="px-3 py-2 border-b border-border/60 text-muted-foreground truncate">
+                    <span className="block font-medium text-foreground truncate">{currentUser.email}</span>
+                  </div>
+                  <button
+                    onClick={() => { setIsExportOpen(true); setIsProfileMenuOpen(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-muted font-medium transition-colors text-left"
+                  >
+                    <Download className="w-3.5 h-3.5 text-primary" />
+                    Export Data (CSV/JSON)
+                  </button>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-destructive/10 text-destructive font-medium transition-colors text-left"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsAuthOpen(true)}
+              className="h-8 text-xs font-bold gap-1 px-2.5 rounded-xl"
+            >
+              <LogIn className="w-3.5 h-3.5" /> Sign In
+            </Button>
+          )}
+        </div>
       </header>
 
       {/* Main Tab Content */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 space-y-4">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground">
-            <RefreshCw className="w-6 h-6 animate-spin text-primary" />
-            <span className="text-xs">Loading financial fortress...</span>
+          <div className="flex flex-col items-center justify-center py-28 gap-3 text-muted-foreground">
+            <RefreshCw className="w-7 h-7 animate-spin text-primary" />
+            <span className="text-sm font-medium">Loading financial fortress...</span>
           </div>
         ) : (
           <>
@@ -131,6 +197,18 @@ export default function Home() {
 
       {/* Sticky Bottom Navigation Bar */}
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Modals */}
+      <AuthDialog
+        open={isAuthOpen}
+        onOpenChange={setIsAuthOpen}
+        onSuccess={loadData}
+      />
+
+      <ExportDialog
+        open={isExportOpen}
+        onOpenChange={setIsExportOpen}
+      />
     </main>
   );
 }

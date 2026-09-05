@@ -20,7 +20,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom,0px)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur-lg border-t border-border/80 pb-[max(env(safe-area-inset-bottom,0px),16px)] shadow-lg">
       <div className="max-w-md mx-auto grid grid-cols-4 h-16 items-center px-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -30,17 +30,17 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 h-full w-full transition-colors relative",
+                "flex flex-col items-center justify-center gap-1.5 h-full w-full transition-all relative select-none",
                 isActive
-                  ? "text-primary font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-primary font-bold"
+                  : "text-muted-foreground hover:text-foreground font-medium"
               )}
             >
               {isActive && (
-                <span className="absolute top-0 w-8 h-1 bg-primary rounded-b-full shadow-sm" />
+                <span className="absolute top-0 w-10 h-1 bg-primary rounded-b-full shadow-sm" />
               )}
-              <Icon className={cn("w-5 h-5 transition-transform", isActive && "scale-110")} />
-              <span className="text-[11px] leading-tight tracking-tight">{tab.label}</span>
+              <Icon className={cn("w-5 h-5 transition-transform", isActive && "scale-115 text-primary")} />
+              <span className="text-xs tracking-tight leading-none">{tab.label}</span>
             </button>
           );
         })}
