@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -13,6 +13,16 @@ export interface IncomeProfile {
   barebones_monthly: number;
   comfortable_monthly: number;
   wizard_completed: boolean;
+  is_variable_income: boolean;
+  holding_buffer_balance: number;
+  target_monthly_salary: number;
+  work_hours_per_week: number;
+  work_weeks_per_year: number;
+  savings_target_percent: number;
+  paycheck_split_fixed_pct: number;
+  paycheck_split_variable_pct: number;
+  paycheck_split_sinking_pct: number;
+  paycheck_split_waterfall_pct: number;
 }
 
 export async function getIncomeProfile(): Promise<IncomeProfile | null> {
@@ -34,13 +44,23 @@ export async function getIncomeProfile(): Promise<IncomeProfile | null> {
   return {
     id: data.id,
     user_id: data.user_id,
-    monthly_gross_income: Number(data.monthly_gross_income),
-    monthly_net_income: Number(data.monthly_net_income),
+    monthly_gross_income: Number(data.monthly_gross_income || 0),
+    monthly_net_income: Number(data.monthly_net_income || 0),
     pay_frequency: data.pay_frequency as any,
-    tax_rate_percent: Number(data.tax_rate_percent),
-    barebones_monthly: Number(data.barebones_monthly),
-    comfortable_monthly: Number(data.comfortable_monthly),
-    wizard_completed: data.wizard_completed,
+    tax_rate_percent: Number(data.tax_rate_percent || 22),
+    barebones_monthly: Number(data.barebones_monthly || 0),
+    comfortable_monthly: Number(data.comfortable_monthly || 0),
+    wizard_completed: !!data.wizard_completed,
+    is_variable_income: !!data.is_variable_income,
+    holding_buffer_balance: Number(data.holding_buffer_balance || 0),
+    target_monthly_salary: Number(data.target_monthly_salary || 0),
+    work_hours_per_week: Number(data.work_hours_per_week || 40),
+    work_weeks_per_year: Number(data.work_weeks_per_year || 50),
+    savings_target_percent: Number(data.savings_target_percent || 20),
+    paycheck_split_fixed_pct: Number(data.paycheck_split_fixed_pct || 50),
+    paycheck_split_variable_pct: Number(data.paycheck_split_variable_pct || 30),
+    paycheck_split_sinking_pct: Number(data.paycheck_split_sinking_pct || 10),
+    paycheck_split_waterfall_pct: Number(data.paycheck_split_waterfall_pct || 10),
   };
 }
 

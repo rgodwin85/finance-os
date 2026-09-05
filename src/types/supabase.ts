@@ -231,40 +231,70 @@ export type Database = {
           barebones_monthly: number
           comfortable_monthly: number
           created_at: string
+          holding_buffer_balance: number
           id: string
+          is_variable_income: boolean
           monthly_gross_income: number
           monthly_net_income: number
           pay_frequency: string
+          paycheck_split_fixed_pct: number
+          paycheck_split_sinking_pct: number
+          paycheck_split_variable_pct: number
+          paycheck_split_waterfall_pct: number
+          savings_target_percent: number
+          target_monthly_salary: number
           tax_rate_percent: number
           updated_at: string
           user_id: string
           wizard_completed: boolean
+          work_hours_per_week: number
+          work_weeks_per_year: number
         }
         Insert: {
           barebones_monthly?: number
           comfortable_monthly?: number
           created_at?: string
+          holding_buffer_balance?: number
           id?: string
+          is_variable_income?: boolean
           monthly_gross_income?: number
           monthly_net_income?: number
           pay_frequency?: string
+          paycheck_split_fixed_pct?: number
+          paycheck_split_sinking_pct?: number
+          paycheck_split_variable_pct?: number
+          paycheck_split_waterfall_pct?: number
+          savings_target_percent?: number
+          target_monthly_salary?: number
           tax_rate_percent?: number
           updated_at?: string
           user_id: string
           wizard_completed?: boolean
+          work_hours_per_week?: number
+          work_weeks_per_year?: number
         }
         Update: {
           barebones_monthly?: number
           comfortable_monthly?: number
           created_at?: string
+          holding_buffer_balance?: number
           id?: string
+          is_variable_income?: boolean
           monthly_gross_income?: number
           monthly_net_income?: number
           pay_frequency?: string
+          paycheck_split_fixed_pct?: number
+          paycheck_split_sinking_pct?: number
+          paycheck_split_variable_pct?: number
+          paycheck_split_waterfall_pct?: number
+          savings_target_percent?: number
+          target_monthly_salary?: number
           tax_rate_percent?: number
           updated_at?: string
           user_id?: string
           wizard_completed?: boolean
+          work_hours_per_week?: number
+          work_weeks_per_year?: number
         }
         Relationships: []
       }

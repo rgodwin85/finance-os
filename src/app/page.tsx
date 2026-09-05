@@ -1,18 +1,21 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Shield, RefreshCw, LogIn, LogOut, Download, Sparkles, Sliders, Tv, Wallet } from "lucide-react";
+import { Shield, RefreshCw, LogIn, LogOut, Download, Sparkles, Sliders, Tv, Wallet, Briefcase, Split, Zap } from "lucide-react";
 import { BottomNav, NavTab } from "@/components/layout/bottom-nav";
 import { WaterfallCard } from "@/components/dashboard/waterfall-card";
 import { QuickAddDialog } from "@/components/transactions/quick-add-dialog";
 import { SinkingFundsCard } from "@/components/sinking-funds/sinking-funds-card";
 import { UtilityBufferCard } from "@/components/utilities/utility-buffer-card";
+import { IncomeHoldingBufferCard } from "@/components/utilities/income-holding-buffer-card";
 import { RecentTransactions } from "@/components/transactions/recent-transactions";
 import { AuthDialog } from "@/components/auth/auth-dialog";
 import { ExportDialog } from "@/components/export/export-dialog";
 import { SetupWizardDialog } from "@/components/wizard/setup-wizard-dialog";
 import { BudgetManagerCard } from "@/components/budget/budget-manager-card";
 import { SubscriptionAuditCard } from "@/components/subscriptions/subscription-audit-card";
+import { FreedomRateCalculator } from "@/components/calculator/freedom-rate-calculator";
+import { PaycheckSplitterCard } from "@/components/budget/paycheck-splitter-card";
 import { getWaterfallData } from "@/actions/waterfall";
 import { getSinkingFunds, SinkingFundItem } from "@/actions/sinking-funds";
 import { getTransactions, TransactionItem } from "@/actions/transactions";
@@ -24,7 +27,9 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<NavTab>("waterfall");
-  const [budgetSubView, setBudgetSubView] = useState<"envelopes" | "subscriptions">("envelopes");
+  const [budgetSubView, setBudgetSubView] = useState<"envelopes" | "subscriptions" | "freedom" | "splitter">("envelopes");
+  const [bufferSubView, setBufferSubView] = useState<"income" | "utility">("income");
+  const [splitterPrefillAmount, setSplitterPrefillAmount] = useState<number | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -201,34 +206,64 @@ export default function Home() {
 
             {activeTab === "budget" && (
               <div className="space-y-4">
-                {/* Budget Sub-View Switcher */}
-                <div className="flex bg-muted/60 p-1 rounded-2xl border border-border/80">
+                {/* Budget Sub-View Switcher (4-Way) */}
+                <div className="grid grid-cols-4 bg-muted/60 p-1 rounded-2xl border border-border/80 text-[11px] font-bold">
                   <button
                     onClick={() => setBudgetSubView("envelopes")}
-                    className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                    className={`py-2 px-1 rounded-xl transition-all flex items-center justify-center gap-1 truncate ${
                       budgetSubView === "envelopes"
                         ? "bg-card text-foreground shadow-xs"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    <Wallet className="w-3.5 h-3.5" /> Budget Envelopes
+                    <Wallet className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">Envelopes</span>
                   </button>
                   <button
                     onClick={() => setBudgetSubView("subscriptions")}
-                    className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                    className={`py-2 px-1 rounded-xl transition-all flex items-center justify-center gap-1 truncate ${
                       budgetSubView === "subscriptions"
                         ? "bg-card text-foreground shadow-xs"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    <Tv className="w-3.5 h-3.5" /> Subscriptions Audit
+                    <Tv className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">Subs</span>
+                  </button>
+                  <button
+                    onClick={() => setBudgetSubView("freedom")}
+                    className={`py-2 px-1 rounded-xl transition-all flex items-center justify-center gap-1 truncate ${
+                      budgetSubView === "freedom"
+                        ? "bg-card text-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Briefcase className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">Freedom</span>
+                  </button>
+                  <button
+                    onClick={() => setBudgetSubView("splitter")}
+                    className={`py-2 px-1 rounded-xl transition-all flex items-center justify-center gap-1 truncate ${
+                      budgetSubView === "splitter"
+                        ? "bg-card text-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Split className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">Splitter</span>
                   </button>
                 </div>
 
-                {budgetSubView === "envelopes" ? (
+                {budgetSubView === "envelopes" && (
                   <BudgetManagerCard categories={categoriesWithBudget} onRefresh={loadData} />
-                ) : (
+                )}
+                {budgetSubView === "subscriptions" && (
                   <SubscriptionAuditCard categories={categoriesWithBudget} onRefresh={loadData} />
+                )}
+                {budgetSubView === "freedom" && (
+                  <FreedomRateCalculator />
+                )}
+                {budgetSubView === "splitter" && (
+                  <PaycheckSplitterCard
+                    initialAmount={splitterPrefillAmount}
+                    onDisbursementComplete={loadData}
+                  />
                 )}
               </div>
             )}
@@ -238,7 +273,44 @@ export default function Home() {
             )}
 
             {activeTab === "utilities" && (
-              <UtilityBufferCard />
+              <div className="space-y-4">
+                {/* Buffer Sub-View Switcher */}
+                <div className="flex bg-muted/60 p-1 rounded-2xl border border-border/80 text-xs font-bold">
+                  <button
+                    onClick={() => setBufferSubView("income")}
+                    className={`flex-1 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                      bufferSubView === "income"
+                        ? "bg-card text-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Wallet className="w-3.5 h-3.5" /> Income Smoothing
+                  </button>
+                  <button
+                    onClick={() => setBufferSubView("utility")}
+                    className={`flex-1 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                      bufferSubView === "utility"
+                        ? "bg-card text-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Zap className="w-3.5 h-3.5" /> Utility Bills
+                  </button>
+                </div>
+
+                {bufferSubView === "income" ? (
+                  <IncomeHoldingBufferCard
+                    onSalaryDrawn={(amt) => {
+                      setSplitterPrefillAmount(amt);
+                      setActiveTab("budget");
+                      setBudgetSubView("splitter");
+                    }}
+                    onRefresh={loadData}
+                  />
+                ) : (
+                  <UtilityBufferCard />
+                )}
+              </div>
             )}
 
             {activeTab === "history" && (

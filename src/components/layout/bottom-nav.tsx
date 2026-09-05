@@ -16,7 +16,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
     { id: "waterfall" as NavTab, label: "Waterfall", icon: Layers },
     { id: "budget" as NavTab, label: "Budget", icon: Wallet },
     { id: "sinking" as NavTab, label: "Sinking", icon: PiggyBank },
-    { id: "utilities" as NavTab, label: "Utilities", icon: Zap },
+    { id: "utilities" as NavTab, label: "Buffers", icon: Zap },
     { id: "history" as NavTab, label: "Outflows", icon: Receipt },
   ];
 
